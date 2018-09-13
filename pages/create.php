@@ -48,33 +48,20 @@ if($_SERVER["REQUEST_METHOD"] == "POST"){
     // Check input errors before inserting in database
     if(empty($name_err) && empty($address_err) && empty($salary_err)){
         // Prepare an insert statement
-        $sql = "INSERT INTO employees (name, address, salary) VALUES (?, ?, ?)";
- 
-        if($stmt = $mysqli->prepare($sql)){
-            // Bind variables to the prepared statement as parameters
-            $stmt->bind_param("sss", $param_name, $param_address, $param_salary);
-            
-            // Set parameters
-            $param_name = $name;
-            $param_address = $address;
-            $param_salary = $salary;
-            
-            // Attempt to execute the prepared statement
-            if($stmt->execute()){
-                // Records created successfully. Redirect to landing page
-                header("location: welcome.php");
-                exit();
-            } else{
-                echo "Something went wrong. Please try again later.";
-            }
+        $sql = "INSERT INTO employees (name, address, salary) VALUES ('$name', '$address', '$salary')";
+        $results = sqlsrv_query($conn, $sql);
+        if( $results ) { 
+            echo "Row successfully inserted."; 
+            header("location: welcome.php");
+            exit();
+        } else { 
+            echo "Row insertion failed. Please hit the back button and try again.<br>";  
+            die ( print_r( sqlsrv_errors(), true)); 
         }
-         
-        // Close statement
-        $stmt->close();
+        sqlsrv_free_stmt($stmt);
+        sqlsrv_close($conn);
+        
     }
-    
-    // Close connection
-    $mysqli->close();
 }
 ?>
  
@@ -95,7 +82,7 @@ if($_SERVER["REQUEST_METHOD"] == "POST"){
 </head>
 <body>
     <div class="page-header">
-        <h1>Hi, <b><a href="../pages/logout.php"><?php echo htmlspecialchars($_SESSION['username']); ?></a></b>. Welcome to UCT site.</h1>
+        <h1>Hi, <b><a href="../pages/logout.php"><?php echo htmlspecialchars($_SESSION['username']); ?></a></b>. Welcome to UCT WebApp.</h1>
     </div>
 
     <!-- CREATE Page -->

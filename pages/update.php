@@ -51,77 +51,40 @@ if(isset($_POST["id"]) && !empty($_POST["id"])){
     // Check input errors before inserting in database
     if(empty($name_err) && empty($address_err) && empty($salary_err)){
         // Prepare an update statement
-        $sql = "UPDATE employees SET name=?, address=?, salary=? WHERE id=?";
+        $sql = "UPDATE employees SET name='$name', address='$address', salary='$salary' WHERE id=$id";
  
-        if($stmt = $mysqli->prepare($sql)){
-            // Bind variables to the prepared statement as parameters
-            $stmt->bind_param("sssi", $param_name, $param_address, $param_salary, $param_id);
-            
-            // Set parameters
-            $param_name = $name;
-            $param_address = $address;
-            $param_salary = $salary;
-            $param_id = $id;
-            
-            // Attempt to execute the prepared statement
-            if($stmt->execute()){
-                // Records updated successfully. Redirect to landing page
-                header("location: welcome.php");
-                exit();
-            } else{
-                echo "Something went wrong. Please try again later.";
-            }
+        $results = sqlsrv_query($conn, $sql);
+        if( $results ) { 
+            echo "Data successfully updated."; 
+            header("location: welcome.php");
+            exit();
+        } else { 
+            echo "Data updating failed. Please hit the back button and try again.<br>";  
+            die ( print_r( sqlsrv_errors(), true)); 
         }
-         
-        // Close statement
-        $stmt->close();
+        sqlsrv_free_stmt($stmt);
+        sqlsrv_close($conn);
     }
-    
-    // Close connection
-    $mysqli->close();
-} else{
+} else {
     // Check existence of id parameter before processing further
     if(isset($_GET["id"]) && !empty(trim($_GET["id"]))){
         // Get URL parameter
         $id =  trim($_GET["id"]);
         
-        // Prepare a select statement
-        $sql = "SELECT * FROM employees WHERE id = ?";
-        if($stmt = $mysqli->prepare($sql)){
-            // Bind variables to the prepared statement as parameters
-            $stmt->bind_param("i", $param_id);
-            
-            // Set parameters
-            $param_id = $id;
-            
-            // Attempt to execute the prepared statement
-            if($stmt->execute()){
-                $result = $stmt->get_result();
-                
-                if($result->num_rows == 1){
-                    /* Fetch result row as an associative array. Since the result set contains only one row, we don't need to use while loop */
-                    $row = $result->fetch_array(MYSQLI_ASSOC);
-                    
-                    // Retrieve individual field value
-                    $name = $row["name"];
-                    $address = $row["address"];
-                    $salary = $row["salary"];
-                } else{
-                    // URL doesn't contain valid id. Redirect to error page
-                    header("location: error.php");
-                    exit();
-                }
-                
-            } else{
-                echo "Oops! Something went wrong. Please try again later.";
-            }
+        $sql = "SELECT * FROM employees WHERE id = $id";
+        $stmt = sqlsrv_query( $conn, $sql );
+        if( $stmt === false) {
+            die( print_r( sqlsrv_errors(), true) );
         }
+
+        if( sqlsrv_fetch( $stmt ) === false) {
+            die( print_r( sqlsrv_errors(), true));
+        }
+
+        $name = sqlsrv_get_field( $stmt, 1);
+        $address = sqlsrv_get_field( $stmt, 2);
+        $salary = sqlsrv_get_field( $stmt, 3);
         
-        // Close statement
-        $stmt->close();
-        
-        // Close connection
-        $mysqli->close();
     }  else{
         // URL doesn't contain id parameter. Redirect to error page
         header("location: error.php");
@@ -147,7 +110,7 @@ if(isset($_POST["id"]) && !empty($_POST["id"])){
 </head>
 <body>
     <div class="page-header">
-        <h1>Hi, <b><a href="../pages/logout.php"><?php echo htmlspecialchars($_SESSION['username']); ?></a></b>. Welcome to UCT site.</h1>
+        <h1>Hi, <b><a href="../pages/logout.php"><?php echo htmlspecialchars($_SESSION['username']); ?></a></b>. Welcome to UCT WebApp.</h1>
     </div>
 
     <!-- UPDATE Page -->

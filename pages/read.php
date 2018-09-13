@@ -10,47 +10,25 @@ if(!isset($_SESSION['username']) || empty($_SESSION['username'])){
 
 // Check existence of id parameter before processing further
 if(isset($_GET["id"]) && !empty(trim($_GET["id"]))){
+    $id = $_GET["id"];
     // Include config file
     require_once '../config/config.php';
     
     // Prepare a select statement
-    $sql = "SELECT * FROM employees WHERE id = ?";
-    
-    if($stmt = $mysqli->prepare($sql)){
-        // Bind variables to the prepared statement as parameters
-        $stmt->bind_param("i", $param_id);
-        
-        // Set parameters
-        $param_id = trim($_GET["id"]);
-        
-        // Attempt to execute the prepared statement
-        if($stmt->execute()){
-            $result = $stmt->get_result();
-            
-            if($result->num_rows == 1){
-                /* Fetch result row as an associative array. Since the result set contains only one row, we don't need to use while loop */
-                $row = $result->fetch_array(MYSQLI_ASSOC);
-                
-                // Retrieve individual field value
-                $name = $row["name"];
-                $address = $row["address"];
-                $salary = $row["salary"];
-            } else{
-                // URL doesn't contain valid id parameter. Redirect to error page
-                header("location: error.php");
-                exit();
-            }
-            
-        } else{
-            echo "Oops! Something went wrong. Please try again later.";
-        }
+    $sql = "SELECT * FROM employees WHERE id = $id";
+    $stmt = sqlsrv_query( $conn, $sql );
+    if( $stmt === false) {
+        die( print_r( sqlsrv_errors(), true) );
     }
-     
-    // Close statement
-    $stmt->close();
-    
-    // Close connection
-    $mysqli->close();
+
+    if( sqlsrv_fetch( $stmt ) === false) {
+        die( print_r( sqlsrv_errors(), true));
+    }
+
+    $name = sqlsrv_get_field( $stmt, 1);
+    $address = sqlsrv_get_field( $stmt, 2);
+    $salary = sqlsrv_get_field( $stmt, 3);
+
 } else{
     // URL doesn't contain id parameter. Redirect to error page
     header("location: error.php");
@@ -76,7 +54,7 @@ if(isset($_GET["id"]) && !empty(trim($_GET["id"]))){
 </head>
 <body>
     <div class="page-header">
-        <h1>Hi, <b><a href="../pages/logout.php"><?php echo htmlspecialchars($_SESSION['username']); ?></a></b>. Welcome to UCT site.</h1>
+        <h1>Hi, <b><a href="../pages/logout.php"><?php echo htmlspecialchars($_SESSION['username']); ?></a></b>. Welcome to UCT WebApp.</h1>
     </div>
 
     <!-- READ Page -->
@@ -89,15 +67,15 @@ if(isset($_GET["id"]) && !empty(trim($_GET["id"]))){
                     </div>
                     <div class="form-group">
                         <label>Name</label>
-                        <p class="form-control-static"><?php echo $row["name"]; ?></p>
+                        <p class="form-control-static"><?php echo $name; ?></p>
                     </div>
                     <div class="form-group">
                         <label>Address</label>
-                        <p class="form-control-static"><?php echo $row["address"]; ?></p>
+                        <p class="form-control-static"><?php echo $address; ?></p>
                     </div>
                     <div class="form-group">
                         <label>Salary</label>
-                        <p class="form-control-static"><?php echo $row["salary"]; ?></p>
+                        <p class="form-control-static"><?php echo $salary; ?></p>
                     </div>
                     <p><a href="welcome.php" class="btn btn-primary">Back</a></p>
                 </div>

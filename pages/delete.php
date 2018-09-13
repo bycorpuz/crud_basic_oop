@@ -12,32 +12,20 @@ if(!isset($_SESSION['username']) || empty($_SESSION['username'])){
 if(isset($_POST["id"]) && !empty($_POST["id"])){
     // Include config file
     require_once '../config/config.php';
+
+    $id = trim($_POST["id"]);
     
     // Prepare a delete statement
-    $sql = "DELETE FROM employees WHERE id = ?";
-    
-    if($stmt = $mysqli->prepare($sql)){
-        // Bind variables to the prepared statement as parameters
-        $stmt->bind_param("i", $param_id);
-        
-        // Set parameters
-        $param_id = trim($_POST["id"]);
-        
-        // Attempt to execute the prepared statement
-        if($stmt->execute()){
-            // Records deleted successfully. Redirect to landing page
-            header("location: welcome.php");
-            exit();
-        } else{
-            echo "Oops! Something went wrong. Please try again later.";
-        }
+    $sql = "DELETE FROM employees WHERE id = $id";
+
+    $stmt = sqlsrv_query( $conn, $sql );
+    if( $stmt === false) {
+        die( print_r( sqlsrv_errors(), true) );
     }
-     
-    // Close statement
-    $stmt->close();
-    
-    // Close connection
-    $mysqli->close();
+
+    header("location: welcome.php");
+    exit();
+
 } else{
     // Check existence of id parameter
     if(empty(trim($_GET["id"]))){
@@ -65,7 +53,7 @@ if(isset($_POST["id"]) && !empty($_POST["id"])){
 </head>
 <body>
     <div class="page-header">
-        <h1>Hi, <b><a href="../pages/logout.php"><?php echo htmlspecialchars($_SESSION['username']); ?></a></b>. Welcome to UCT site.</h1>
+        <h1>Hi, <b><a href="../pages/logout.php"><?php echo htmlspecialchars($_SESSION['username']); ?></a></b>. Welcome to UCT WebApp.</h1>
     </div>
 
     <!-- DELETE Page -->
